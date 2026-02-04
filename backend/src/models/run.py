@@ -14,6 +14,7 @@ class Run(Base):
     status = Column(String, nullable=False, default='pending')  # pending, running, completed, failed
     current_stage = Column(String(100), nullable=True)
     optional_direction = Column(String(500), nullable=True)
+    selected_direction = Column(String(1000), nullable=True)  # Фактически выбранное направление (может быть случайным)
     ideas_count = Column(Integer, nullable=False, default=0)
     error_message = Column(Text, nullable=True)
 
@@ -27,6 +28,7 @@ class Run(Base):
             'current_stage': self.current_stage,
             'progress_percent': self._calculate_progress(),
             'optional_direction': self.optional_direction,
+            'selected_direction': self.selected_direction,
             'ideas_count': self.ideas_count,
             'error_message': self.error_message,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -38,7 +40,7 @@ class Run(Base):
         stage_progress = {
             'Поиск сигналов': 20,
             'Анализ болей': 40,
-            'Генерация идей': 60,
+            'Поиск идей': 60,
             'Поиск аналогов': 80,
             'Создание планов': 90,
             'Завершение': 100

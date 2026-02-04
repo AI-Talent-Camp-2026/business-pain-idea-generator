@@ -202,5 +202,7 @@ async def get_ideas(run_id: str, db: Session = Depends(get_db)):
     return {
         "run_id": run_id,
         "ideas_count": len(ideas),
+        "selected_direction": run.selected_direction,
+        "optional_direction": run.optional_direction,
         "ideas": [idea.to_dict_brief() for idea in ideas]
     }

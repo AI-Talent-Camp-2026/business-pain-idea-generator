@@ -33,12 +33,17 @@ def generate_ideas(run_id: str):
 
         # Update status
         run.status = 'running'
-        run.current_stage = 'Генерация идей'
+        run.current_stage = 'Поиск идей'
         db.commit()
 
         # Generate ideas using LLM
-        prompt = get_generate_ideas_prompt(run.optional_direction or "")
-        logger.info(f"Calling OpenRouter API for run {run_id}")
+        prompt, selected_direction = get_generate_ideas_prompt(run.optional_direction or "")
+
+        # Save selected direction
+        run.selected_direction = selected_direction
+        db.commit()
+
+        logger.info(f"Calling OpenRouter API for run {run_id} with direction: {selected_direction}")
 
         # Use asyncio to call async LLM client
         loop = asyncio.new_event_loop()

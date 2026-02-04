@@ -155,6 +155,17 @@ async function loadIdeas(runId) {
         }
 
         const data = await response.json();
+
+        // Display selected direction if available
+        if (data.selected_direction) {
+            const directionInfo = document.getElementById('direction-info');
+            const directionText = document.getElementById('selected-direction');
+            if (directionInfo && directionText) {
+                directionText.textContent = data.selected_direction;
+                directionInfo.classList.remove('hidden');
+            }
+        }
+
         displayIdeas(data.ideas);
     } catch (error) {
         showError(`Ошибка загрузки идей: ${error.message}`);
