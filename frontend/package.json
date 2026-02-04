@@ -1,0 +1,11 @@
+{
+  "name": "business-pain-idea-generator-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Business Pain to Idea Generator",
+  "scripts": {
+    "dev": "live-server --port=3000 --open=index.html --watch=. --mount=/:."
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

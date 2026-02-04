@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pain-to-Idea Generator - Генератор бизнес-идей</title>
+    <title>Поиск бизнес-идей</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="assets/api.js?v=2"></script>
     <script src="assets/app.js?v=2"></script>
@@ -12,29 +12,28 @@
     <div class="container mx-auto px-4 py-12 max-w-4xl">
         <!-- Header -->
         <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">
-                💡 Pain-to-Idea Generator
+            <h1 class="text-5xl font-bold mb-4">
+                <span class="text-red-600">L</span><span class="text-blue-600">a</span><span class="text-green-600">n</span><span class="text-yellow-600">k</span><span class="text-purple-600">a</span>
             </h1>
             <p class="text-xl text-gray-600">
-                Генератор бизнес-идей из реальных пользовательских болей
+                Бизнес-идеи из реальных пользовательских болей
             </p>
         </header>
 
         <!-- Main Card -->
         <div class="bg-white rounded-lg shadow-lg p-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6">
-                Запустить генерацию идей
+                Запустить поиск идей
             </h2>
 
-            <p class="text-gray-600 mb-6">
-                Система автоматически найдет реальные боли пользователей и сгенерирует 10-15 бизнес-идей
-                с аналогами, планами реализации и оценкой уверенности.
+            <p class="text-blue-900 font-semibold mb-6" style="color:#2563eb">
+                Введи нишу — через 10 минут получи 10+ бизнес-идей с реальными болями, работающими аналогами и планом запуска на первую неделю. Без ресёрча, без гаданий.
             </p>
 
             <!-- Optional Direction Input -->
             <div class="mb-6">
                 <label for="optional-direction" class="block text-sm font-medium text-gray-700 mb-2">
-                    Направление (опционально)
+                    Ниша
                 </label>
                 <input
                     type="text"
@@ -53,7 +52,7 @@
                 onclick="startRun()"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-                🚀 Запустить прогон
+                🚀 Запустить
             </button>
 
             <!-- Error Message -->
@@ -65,7 +64,7 @@
         <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-lg shadow">
                 <div class="text-3xl mb-3">🎯</div>
-                <h3 class="font-semibold text-gray-800 mb-2">10-15 идей</h3>
+                <h3 class="font-semibold text-gray-800 mb-2">10 идей</h3>
                 <p class="text-sm text-gray-600">
                     Полный пакет бизнес-идей с болями, сегментами и доказательствами
                 </p>
@@ -75,7 +74,7 @@
                 <div class="text-3xl mb-3">🔍</div>
                 <h3 class="font-semibold text-gray-800 mb-2">Аналоги</h3>
                 <p class="text-sm text-gray-600">
-                    Минимум 2-3 существующих решения с ссылками для каждой идеи
+                    Обзор существующих решений с 
                 </p>
             </div>
 
