@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(pwsh -File:*)",
+      "Bash(python3:*)",
+      "Bash(python -c:*)",
+      "Bash(if [ -d \"specs/001-pain-to-idea-mvp/checklists\" ])",
+      "Bash(then find specs/001-pain-to-idea-mvp/checklists -name \"*.md\" -type f)",
+      "Bash(else echo \"No checklists directory\")",
+      "Bash(fi)",
+      "Bash(test:*)",
+      "Bash(python -m venv:*)",
+      "Bash(venvScriptspython.exe -m pip install -q -r requirements.txt)",
+      "Bash(python -m pip install:*)",
+      "Bash(python -m src.models.init_db:*)",
+      "Bash(redis-cli ping:*)",
+      "Bash(docker run:*)",
+      "Bash(docker start:*)",
+      "Bash(python -m uvicorn:*)",
+      "Bash(python -m src.workers.run_worker:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(curl:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали идеи - Pain-to-Idea Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/api.js?v=2"></script>
+    <script src="assets/app.js?v=2"></script>
+    <style>
+        .confidence-badge.high {
+            background-color: #10b981;
+            color: white;
+        }
+        .confidence-badge.medium {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .confidence-badge.low {
+            background-color: #6b7280;
+            color: white;
+        }
+        .analogue-item {
+            transition: all 0.2s ease;
+        }
+        .analogue-item:hover {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+        <!-- Back Button -->
+        <button
+            onclick="history.back()"
+            class="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center"
+        >
+            ← Назад к списку
+        </button>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <!-- Title and Confidence -->
+            <div class="flex justify-between items-start mb-6">
+                <h1 id="idea-title" class="text-3xl font-bold text-gray-900 pr-4">
+                    Загрузка...
+                </h1>
+                <span id="confidence-level" class="confidence-badge text-sm px-3 py-1 rounded-full whitespace-nowrap">
+                </span>
+            </div>
+
+            <!-- Pain Description -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">🎯 Боль</h2>
+                <p id="pain-description" class="text-gray-700 leading-relaxed">
+                </p>
+            </section>
+
+            <!-- Segment -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">👥 Кому болит</h2>
+                <p id="segment" class="text-gray-700">
+                </p>
+            </section>
+
+            <!-- Evidence -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">📊 Доказательства</h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p id="brief-evidence" class="text-gray-700 whitespace-pre-wrap">
+                    </p>
+                </div>
+                <div id="detailed-evidence" class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4" style="display: none;">
+                    <p class="text-sm text-gray-600">
+                        Детальные доказательства и источники будут добавлены в следующих версиях.
+                    </p>
+                </div>
+                <button
+                    id="toggle-evidence-button"
+                    onclick="toggleDetailedEvidence()"
+                    class="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                    Подробнее
+                </button>
+            </section>
+
+            <!-- Analogues -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">🔍 Аналоги</h2>
+                <div id="analogues-list" class="space-y-4">
+                    <!-- Analogues will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Plans -->
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 Планы реализации</h2>
+
+                <!-- 7 Days Plan -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
+                        🚀 План на 7 дней
+                    </h3>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p id="plan-7days" class="text-gray-700 whitespace-pre-wrap">
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 30 Days Plan -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
+                        📅 План на 30 дней
+                    </h3>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p id="plan-30days" class="text-gray-700 whitespace-pre-wrap">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
+        </div>
+    </div>
+
+    <script>
+        // Auto-load idea details when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const ideaId = parseInt(getQueryParam('idea_id'));
+            if (ideaId) {
+                loadIdeaDetail(ideaId);
+            } else {
+                showError('Не указан ID идеи');
+            }
+        });
+    </script>
+</body>
+</html>

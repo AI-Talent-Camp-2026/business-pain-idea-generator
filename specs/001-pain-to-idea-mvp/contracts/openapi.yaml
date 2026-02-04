@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: Pain-to-Idea Generator API
+  description: |
+    REST API для генератора бизнес-идей из болей пользователей.
+    Асинхронная генерация 10-20 идей с доказательствами, аналогами и планами.
+  version: 1.0.0
+  contact:
+    name: Pain-to-Idea Generator MVP
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://pain-to-idea-mvp.railway.app
+    description: Production (Railway)
+
+tags:
+  - name: runs
+    description: Управление прогонами генерации
+  - name: ideas
+    description: Просмотр сгенерированных идей
+  - name: export
+    description: Экспорт результатов
+
+paths:
+  /api/runs:
+    post:
+      tags: [runs]
+      summary: Создать новый прогон генерации
+      description: |
+        Запускает асинхронную генерацию 10-20 бизнес-идей.
+        Возвращает ID прогона для отслеживания статуса.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                optional_direction:
+                  type: string
+                  maxLength: 500
+                  description: Опциональное направление/интерес для фокусировки идей
+                  example: "B2B SaaS для стартапов"
+      responses:
+        '201':
+          description: Прогон создан успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunCreated'
+        '429':
+          description: Превышен лимит запросов (rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/runs/{run_id}:
+    get:
+      tags: [runs]
+      summary: Получить статус прогона
+      description: Возвращает текущий статус и этап выполнения прогона
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID прогона
+      responses:
+        '200':
+          description: Статус прогона получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatus'
+        '404':
+          description: Прогон не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/runs/{run_id}/progress:
+    get:
+      tags: [runs]
+      summary: Server-Sent Events для прогресса прогона
+      description: |
+        Поток событий с обновлениями статуса прогона в реальном времени.
+        Используется для отображения прогресс-бара.
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Поток событий
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  SSE события в формате:
+                  event: progress
+                  data: {"status": "running", "current_stage": "Поиск сигналов", "progress_percent": 20}
+
+                  event: complete
+                  data: {"status": "completed", "ideas_count": 15}
+
+                  event: error
+                  data: {"status": "failed", "error_message": "OpenRouter API недоступен"}
+        '404':
+          description: Прогон не найден
+
+  /api/runs/{run_id}/ideas:
+    get:
+      tags: [ideas]
+      summary: Получить список идей прогона
+      description: Возвращает все сгенерированные идеи (10-20) с краткой информацией
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Список идей получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id:
+                    type: string
+                    format: uuid
+                  ideas_count:
+                    type: integer
+                    minimum: 10
+                    maximum: 20
+                  ideas:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IdeaBrief'
+        '404':
+          description: Прогон не найден или не завершен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/ideas/{idea_id}:
+    get:
+      tags: [ideas]
+      summary: Получить детали идеи
+      description: |
+        Возвращает полную информацию об идее:
+        боль, доказательства, аналоги, планы на 7 и 30 дней
+      parameters:
+        - name: idea_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Детали идеи получены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdeaFull'
+        '404':
+          description: Идея не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/export/markdown:
+    post:
+      tags: [export]
+      summary: Экспортировать идеи в Markdown
+      description: |
+        Генерирует .md файл с выбранными идеями или всеми идеями прогона.
+        Возвращает файл для скачивания.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [run_id]
+              properties:
+                run_id:
+                  type: string
+                  format: uuid
+                  description: ID прогона
+                idea_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: |
+                    Список ID идей для экспорта.
+                    Если не указан - экспортируются все идеи прогона.
+      responses:
+        '200':
+          description: Markdown файл сгенерирован
+          content:
+            text/markdown:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="ideas-{run_id}.md"
+        '404':
+          description: Прогон или идеи не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    RunCreated:
+      type: object
+      required: [run_id, status, created_at]
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          description: Уникальный ID прогона
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          enum: [pending, running]
+          description: Начальный статус прогона
+          example: "pending"
+        created_at:
+          type: string
+          format: date-time
+          description: Время создания прогона
+          example: "2026-02-04T10:30:00Z"
+
+    RunStatus:
+      type: object
+      required: [run_id, status, created_at]
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+          description: |
+            - pending: в очереди
+            - running: выполняется
+            - completed: завершен успешно
+            - failed: завершен с ошибкой
+        current_stage:
+          type: string
+          nullable: true
+          description: Текущий этап на русском языке
+          example: "Поиск сигналов"
+          enum:
+            - "Поиск сигналов"
+            - "Анализ болей"
+            - "Генерация идей"
+            - "Поиск аналогов"
+            - "Создание планов"
+            - "Завершение"
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Процент выполнения (приблизительный)
+        optional_direction:
+          type: string
+          nullable: true
+          description: Опциональное направление, указанное пользователем
+        ideas_count:
+          type: integer
+          minimum: 0
+          description: Количество сгенерированных идей (для completed)
+        error_message:
+          type: string
+          nullable: true
+          description: Сообщение об ошибке (для failed) на русском языке
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    IdeaBrief:
+      type: object
+      required: [id, title, pain_description, segment, confidence_level]
+      properties:
+        id:
+          type: integer
+          description: ID идеи
+        title:
+          type: string
+          maxLength: 200
+          description: Название идеи на русском
+          example: "Сервис валидации бизнес-идей для фаундеров"
+        pain_description:
+          type: string
+          description: Краткое описание боли (1 абзац)
+          example: "Фаундеры тратят недели на выбор идеи, не зная какие боли реально стоят денег."
+        segment:
+          type: string
+          maxLength: 200
+          description: Кому болит (сегмент)
+          example: "Фаундеры 0→1 и инди-хакеры"
+        confidence_level:
+          type: string
+          enum: [high, medium, low]
+          description: Уровень уверенности в идее
+          example: "high"
+        brief_evidence:
+          type: string
+          description: Краткие доказательства (2-5 строк паттернов)
+
+    IdeaFull:
+      allOf:
+        - $ref: '#/components/schemas/IdeaBrief'
+        - type: object
+          required: [analogues, plan_7days, plan_30days]
+          properties:
+            detailed_evidence:
+              type: object
+              nullable: true
+              description: Детальные доказательства (JSON)
+              properties:
+                sources:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: "forum"
+                      url:
+                        type: string
+                        format: uri
+                      context:
+                        type: string
+                quotes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                      source:
+                        type: string
+            analogues:
+              type: array
+              minItems: 2
+              items:
+                $ref: '#/components/schemas/Analogue'
+              description: Минимум 2 аналога/конкурента
+            plan_7days:
+              type: string
+              description: План реализации на 7 дней
+              example: |
+                1. День 1-2: Настроить landing с формой подписки
+                2. День 3-4: Запустить первый прогон вручную для 5 пользователей
+                ...
+            plan_30days:
+              type: string
+              description: План реализации на 30 дней
+              example: |
+                Неделя 1: MVP с ручной генерацией
+                Неделя 2: Автоматизация парсинга
+                ...
+
+    Analogue:
+      type: object
+      required: [id, name, description, url]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          maxLength: 200
+          description: Название продукта/компании
+          example: "Brandwatch"
+        description:
+          type: string
+          description: Что делают
+          example: "Social listening платформа для брендов"
+        url:
+          type: string
+          format: uri
+          description: Ссылка на продукт
+          example: "https://www.brandwatch.com"
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Тип ошибки
+          example: "NotFound"
+        message:
+          type: string
+          description: Сообщение об ошибке на русском языке
+          example: "Прогон с указанным ID не найден"
+        details:
+          type: object
+          nullable: true
+          description: Дополнительные детали ошибки
+
+  securitySchemes: {}
+
+security: []

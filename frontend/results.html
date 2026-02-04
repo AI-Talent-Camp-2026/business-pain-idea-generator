@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты - Pain-to-Idea Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/api.js?v=2"></script>
+    <script src="assets/app.js?v=2"></script>
+    <style>
+        .idea-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .idea-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .confidence-badge.high {
+            background-color: #10b981;
+            color: white;
+        }
+        .confidence-badge.medium {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .confidence-badge.low {
+            background-color: #6b7280;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                🎉 Ваши бизнес-идеи готовы!
+            </h1>
+            <p class="text-gray-600">
+                Кликните на идею, чтобы посмотреть детали, аналоги и планы реализации
+            </p>
+        </header>
+
+        <!-- Ideas Grid -->
+        <div id="ideas-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Ideas will be dynamically inserted here -->
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Загрузка идей...</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-load ideas when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const runId = getQueryParam('run_id');
+            if (runId) {
+                loadIdeas(runId);
+                document.getElementById('loading').style.display = 'none';
+            } else {
+                document.getElementById('loading').style.display = 'none';
+                showError('Не указан ID прогона');
+            }
+        });
+
+        // Override displayIdeas to add Tailwind styling
+        function displayIdeas(ideas) {
+            const container = document.getElementById('ideas-container');
+            container.innerHTML = '';
+
+            ideas.forEach(idea => {
+                const card = document.createElement('div');
+                card.className = 'idea-card bg-white rounded-lg shadow-md p-6 relative';
+                card.onclick = () => window.location.href = `detail.html?idea_id=${idea.id}`;
+
+                const confidenceBadge = getConfidenceBadge(idea.confidence_level);
+                const confidenceClass = idea.confidence_level;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800 pr-4">${escapeHtml(idea.title)}</h3>
+                        <span class="confidence-badge ${confidenceClass} text-xs px-2 py-1 rounded-full whitespace-nowrap">
+                            ${confidenceBadge}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-3">${escapeHtml(idea.pain_description)}</p>
+                    <div class="text-sm text-gray-700">
+                        <span class="font-medium">Кому:</span> ${escapeHtml(idea.segment)}
+                    </div>
+                    <div class="mt-4 text-sm text-blue-600 font-medium">
+                        Подробнее →
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

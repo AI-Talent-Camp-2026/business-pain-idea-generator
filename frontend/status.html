@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус генерации - Pain-to-Idea Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/api.js?v=2"></script>
+    <script src="assets/app.js?v=2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Генерация идей
+            </h1>
+            <p class="text-gray-600">
+                Пожалуйста, подождите. Это может занять до 10 минут.
+            </p>
+        </header>
+
+        <!-- Status Card -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <!-- Current Stage -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">Текущий этап:</h2>
+                <div id="current-stage" class="text-2xl font-bold text-blue-600 mb-2">
+                    Инициализация...
+                </div>
+                <div id="stage-description" class="text-sm text-gray-600 italic">
+                    Подключение к серверу...
+                </div>
+            </div>
+
+            <!-- Progress Bar with Percentage -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Прогресс</span>
+                    <span id="progress-percent" class="text-sm font-bold text-blue-600">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-inner">
+                    <div
+                        id="progress-bar"
+                        class="bg-gradient-to-r from-blue-500 to-blue-600 h-6 rounded-full transition-all duration-700 ease-out flex items-center justify-center text-xs text-white font-semibold relative overflow-hidden"
+                        style="width: 0%"
+                    >
+                        <div class="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="space-y-3">
+                <div class="text-sm text-gray-600 mb-3">
+                    <span class="font-medium">Недавняя активность:</span>
+                </div>
+                <div id="recent-activity" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Activity items will be added here -->
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="font-semibold text-blue-900 mb-2">💡 Что происходит?</h3>
+            <p class="text-sm text-blue-800">
+                Система анализирует публичные источники, выявляет паттерны болей пользователей
+                и генерирует бизнес-идеи с полным описанием, аналогами и планами реализации.
+            </p>
+        </div>
+    </div>
+
+    <!-- Live Logs Frame (как титры) -->
+    <div class="fixed bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-gray-900 to-transparent pointer-events-none">
+        <div id="logs-container" class="absolute bottom-0 left-0 right-0 h-full overflow-hidden">
+            <div id="logs-scroll" class="text-sm font-mono text-green-400 p-4 space-y-1">
+                <!-- Логи будут добавляться сюда -->
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scroll-up {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-100%);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #logs-scroll {
+            animation: scroll-up 30s linear infinite;
+        }
+
+        .log-line {
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .log-line.success {
+            color: #4ade80;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+
+        .log-line.error {
+            color: #ef4444;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        #progress-bar {
+            background: linear-gradient(
+                90deg,
+                #3b82f6 0%,
+                #60a5fa 50%,
+                #3b82f6 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+
+        #current-stage {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        #recent-activity > div {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* Smooth transitions for all elements */
+        * {
+            transition: all 0.3s ease-out;
+        }
+    </style>
+
+    <script>
+        let logsEventSource = null;
+
+        // Auto-start progress tracking when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const runId = getQueryParam('run_id');
+            if (runId) {
+                trackProgress(runId);
+                startLiveLog(runId);
+            } else {
+                showError('Не указан ID прогона');
+            }
+        });
+
+        function startLiveLog(runId) {
+            const logsScroll = document.getElementById('logs-scroll');
+
+            // Progress mapping based on log messages
+            const progressMap = {
+                'Starting generation': { percent: 5, stage: 'Инициализация', emoji: '🚀' },
+                'Connecting to OpenRouter': { percent: 10, stage: 'Подключение к AI', emoji: '🔌' },
+                'Model:': { percent: 15, stage: 'Настройка модели', emoji: '⚙️' },
+                'Analyzing pain signals': { percent: 25, stage: 'Анализ сигналов', emoji: '🔍' },
+                'Searching for user complaints': { percent: 35, stage: 'Поиск жалоб пользователей', emoji: '📊' },
+                'Identifying recurring pain': { percent: 45, stage: 'Выявление паттернов болей', emoji: '🎯' },
+                'Evaluating market segments': { percent: 55, stage: 'Оценка сегментов рынка', emoji: '📈' },
+                'Generating business ideas': { percent: 65, stage: 'Генерация идей', emoji: '💡' },
+                'Brainstorming creative': { percent: 70, stage: 'Креативный штурм', emoji: '🧠' },
+                'Searching for analogues': { percent: 75, stage: 'Поиск аналогов', emoji: '🔎' },
+                'Analyzing successful': { percent: 80, stage: 'Анализ конкурентов', emoji: '🏆' },
+                'Creating validation': { percent: 85, stage: 'Создание доказательств', emoji: '✓' },
+                'Drafting 7-day': { percent: 90, stage: 'План на 7 дней', emoji: '📅' },
+                'Drafting 30-day': { percent: 93, stage: 'План на 30 дней', emoji: '📋' },
+                'Finalizing idea': { percent: 96, stage: 'Финализация', emoji: '🎨' },
+                'Successfully generated': { percent: 100, stage: 'Завершено!', emoji: '✅' },
+                'Processing...': { percent: null, stage: 'Обработка', emoji: '⏳' }
+            };
+
+            // Connect to logs stream
+            logsEventSource = new EventSource(`${API_BASE_URL}/api/runs/${runId}/logs`);
+
+            logsEventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+
+                // Create new log line
+                const logLine = document.createElement('div');
+                logLine.className = `log-line ${data.type || ''}`;
+
+                const timestamp = new Date(data.timestamp * 1000).toLocaleTimeString();
+                logLine.textContent = `[${timestamp}] ${data.message}`;
+
+                // Add to logs
+                logsScroll.appendChild(logLine);
+
+                // Keep only last 20 lines
+                while (logsScroll.children.length > 20) {
+                    logsScroll.removeChild(logsScroll.firstChild);
+                }
+
+                // Update progress based on log message
+                updateProgressFromLog(data.message);
+
+                // Add to recent activity (if not DEBUG)
+                if (!data.message.includes('[DEBUG]')) {
+                    addRecentActivity(data.message, data.type);
+                }
+            };
+
+            logsEventSource.onerror = function() {
+                console.log('Logs stream closed');
+                if (logsEventSource) {
+                    logsEventSource.close();
+                }
+            };
+
+            function updateProgressFromLog(message) {
+                // Find matching progress info
+                for (const [keyword, info] of Object.entries(progressMap)) {
+                    if (message.includes(keyword)) {
+                        if (info.percent !== null) {
+                            updateProgress(info.percent, `${info.emoji} ${info.stage}`, message);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            function updateProgress(percent, stage, description) {
+                const progressBar = document.getElementById('progress-bar');
+                const progressPercent = document.getElementById('progress-percent');
+                const currentStage = document.getElementById('current-stage');
+                const stageDescription = document.getElementById('stage-description');
+
+                if (progressBar) {
+                    progressBar.style.width = `${percent}%`;
+                }
+                if (progressPercent) {
+                    progressPercent.textContent = `${percent}%`;
+                }
+                if (currentStage) {
+                    currentStage.textContent = stage;
+                }
+                if (stageDescription) {
+                    stageDescription.textContent = description;
+                }
+            }
+
+            function addRecentActivity(message, type) {
+                const activityContainer = document.getElementById('recent-activity');
+
+                const activityItem = document.createElement('div');
+                activityItem.className = `p-3 rounded-lg transition-all ${
+                    type === 'success' ? 'bg-green-50 border border-green-200' :
+                    type === 'error' ? 'bg-red-50 border border-red-200' :
+                    'bg-blue-50 border border-blue-200'
+                }`;
+
+                activityItem.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="mr-2 text-lg">
+                            ${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚡'}
+                        </span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium ${
+                                type === 'success' ? 'text-green-800' :
+                                type === 'error' ? 'text-red-800' :
+                                'text-blue-800'
+                            }">${message}</p>
+                            <p class="text-xs text-gray-500 mt-1">${new Date().toLocaleTimeString()}</p>
+                        </div>
+                    </div>
+                `;
+
+                // Add to top of list
+                if (activityContainer.firstChild) {
+                    activityContainer.insertBefore(activityItem, activityContainer.firstChild);
+                } else {
+                    activityContainer.appendChild(activityItem);
+                }
+
+                // Keep only last 5 items
+                while (activityContainer.children.length > 5) {
+                    activityContainer.removeChild(activityContainer.lastChild);
+                }
+
+                // Animate in
+                activityItem.style.opacity = '0';
+                activityItem.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    activityItem.style.transition = 'all 0.3s ease-out';
+                    activityItem.style.opacity = '1';
+                    activityItem.style.transform = 'translateY(0)';
+                }, 10);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (logsEventSource) {
+                logsEventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>
