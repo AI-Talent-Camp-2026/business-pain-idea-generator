@@ -5,7 +5,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from .config import settings, logger
-from .api import runs, ideas
+from .api import runs, ideas, purchases
 
 # Create FastAPI application
 app = FastAPI(
@@ -37,6 +37,7 @@ def health_check():
 # Include routers
 app.include_router(runs.router, prefix="/api", tags=["runs"])
 app.include_router(ideas.router, prefix="/api", tags=["ideas"])
+app.include_router(purchases.router, prefix="/api", tags=["purchases"])
 
 # Startup event
 @app.on_event("startup")

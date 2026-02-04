@@ -24,6 +24,7 @@ class Idea(Base):
     run = relationship("Run", back_populates="ideas")
     analogues = relationship("Analogue", back_populates="idea", cascade="all, delete-orphan")
     evidences = relationship("Evidence", back_populates="idea", cascade="all, delete-orphan")
+    purchases = relationship("Purchase", back_populates="idea", cascade="all, delete-orphan")
 
     def to_dict_brief(self):
         """Brief representation for ideas list"""

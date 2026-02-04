@@ -257,16 +257,47 @@ function displayIdeaDetail(idea) {
     document.getElementById('plan-30days').textContent = idea.plan_30days;
 }
 
-function toggleDetailedEvidence() {
+async function toggleDetailedEvidence() {
     const detailedSection = document.getElementById('detailed-evidence');
     const button = document.getElementById('toggle-evidence-button');
 
     if (detailedSection.style.display === 'none') {
-        detailedSection.style.display = 'block';
-        button.textContent = 'Скрыть детали';
-    } else {
-        detailedSection.style.display = 'none';
-        button.textContent = 'Подробнее';
+        // Get idea ID from URL
+        const ideaId = parseInt(getQueryParam('idea_id'));
+
+        if (!ideaId) {
+            console.error('Idea ID not found');
+            detailedSection.style.display = 'block';
+            button.style.display = 'none';
+            return;
+        }
+
+        // Disable button during request
+        button.disabled = true;
+        button.textContent = 'Отправка...';
+
+        try {
+            // Send purchase request to API
+            const response = await fetch(`${API_BASE_URL}/api/purchases`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idea_id: ideaId })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка отправки запроса');
+            }
+
+            // Show success message and hide button
+            detailedSection.style.display = 'block';
+            button.style.display = 'none';
+
+        } catch (error) {
+            console.error('Purchase error:', error);
+            // Still show message even if API fails
+            detailedSection.style.display = 'block';
+            button.style.display = 'none';
+        }
     }
 }
 

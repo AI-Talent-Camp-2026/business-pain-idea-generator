@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Статистика покупок</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/api.js?v=2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12 max-w-6xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                📊 Статистика покупок
+            </h1>
+            <p class="text-gray-600">
+                Отслеживание интереса к идеям
+            </p>
+        </header>
+
+        <!-- API Key Input -->
+        <div id="api-key-section" class="mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Введите API ключ</h2>
+                <div class="flex gap-4">
+                    <input
+                        type="password"
+                        id="api-key-input"
+                        placeholder="API ключ из настроек"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                    <button
+                        onclick="loadStats()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg"
+                    >
+                        Загрузить
+                    </button>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">
+                    API ключ: переменная окружения ADMIN_API_KEY
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats Section (hidden by default) -->
+        <div id="stats-section" class="hidden">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-gray-500 text-sm font-medium mb-1">Всего покупок</div>
+                    <div id="total-purchases" class="text-3xl font-bold text-blue-600">0</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-gray-500 text-sm font-medium mb-1">Уникальных идей</div>
+                    <div id="unique-ideas" class="text-3xl font-bold text-green-600">0</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-gray-500 text-sm font-medium mb-1">Последних 24ч</div>
+                    <div id="recent-24h" class="text-3xl font-bold text-purple-600">0</div>
+                </div>
+            </div>
+
+            <!-- Top Ideas -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">🔥 Топ идей по покупкам</h2>
+                <div id="top-ideas-list" class="space-y-3">
+                    <!-- Top ideas will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Recent Purchases -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">🕐 Последние покупки</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">ID</th>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Идея</th>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Дата</th>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-purchases-table" class="divide-y divide-gray-200">
+                            <!-- Recent purchases will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Загрузка статистики...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const apiKey = document.getElementById('api-key-input').value;
+
+            if (!apiKey) {
+                showError('Введите API ключ');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const statsSection = document.getElementById('stats-section');
+
+            loading.classList.remove('hidden');
+            statsSection.classList.add('hidden');
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/purchases`, {
+                    headers: {
+                        'X-API-Key': apiKey
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Неверный API ключ');
+                    }
+                    throw new Error('Ошибка загрузки статистики');
+                }
+
+                const data = await response.json();
+                displayStats(data);
+
+                statsSection.classList.remove('hidden');
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayStats(data) {
+            // Total purchases
+            document.getElementById('total-purchases').textContent = data.total_purchases || 0;
+
+            // Unique ideas
+            document.getElementById('unique-ideas').textContent = data.top_ideas?.length || 0;
+
+            // Calculate last 24h purchases
+            const now = new Date();
+            const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const recent24h = data.recent_purchases?.filter(p =>
+                new Date(p.created_at) > dayAgo
+            ).length || 0;
+            document.getElementById('recent-24h').textContent = recent24h;
+
+            // Top ideas
+            const topIdeasList = document.getElementById('top-ideas-list');
+            topIdeasList.innerHTML = '';
+
+            data.top_ideas?.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl font-bold text-gray-400">#${index + 1}</span>
+                        <div>
+                            <div class="font-medium text-gray-800">${escapeHtml(item.title)}</div>
+                            <div class="text-sm text-gray-500">ID: ${item.idea_id}</div>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-blue-600">${item.purchase_count}</div>
+                `;
+                topIdeasList.appendChild(div);
+            });
+
+            // Recent purchases table
+            const tableBody = document.getElementById('recent-purchases-table');
+            tableBody.innerHTML = '';
+
+            data.recent_purchases?.forEach(purchase => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                const date = new Date(purchase.created_at);
+                const formattedDate = date.toLocaleString('ru-RU');
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 text-sm text-gray-700">${purchase.id}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <div class="font-medium text-gray-800">${escapeHtml(purchase.idea_title || 'N/A')}</div>
+                        <div class="text-xs text-gray-500">Idea ID: ${purchase.idea_id}</div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${formattedDate}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(purchase.user_ip || 'N/A')}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow enter key to submit
+        document.getElementById('api-key-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadStats();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Performance
     generation_timeout_seconds: int = int(os.getenv("GENERATION_TIMEOUT_SECONDS", "600"))
 
+    # Admin
+    admin_api_key: str = os.getenv("ADMIN_API_KEY", "change-me-in-production")
+
     # Logging
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
 

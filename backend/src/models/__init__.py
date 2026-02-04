@@ -28,5 +28,6 @@ from .run import Run
 from .idea import Idea
 from .analogue import Analogue
 from .evidence import Evidence
+from .purchase import Purchase
 
-__all__ = ['Base', 'engine', 'SessionLocal', 'get_db', 'Run', 'Idea', 'Analogue', 'Evidence']
+__all__ = ['Base', 'engine', 'SessionLocal', 'get_db', 'Run', 'Idea', 'Analogue', 'Evidence', 'Purchase']
