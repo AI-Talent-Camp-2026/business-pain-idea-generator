@@ -1,9 +1,12 @@
 // API Client Wrapper for Pain-to-Idea Generator
 
+// Global API Base URL
+const API_BASE_URL = 'http://127.0.0.1:8000';
+
 class ApiClient {
     constructor(baseUrl) {
         // Hardcoded for local development
-        this.baseUrl = 'http://127.0.0.1:8000';
+        this.baseUrl = API_BASE_URL;
     }
 
     async request(endpoint, options = {}) {

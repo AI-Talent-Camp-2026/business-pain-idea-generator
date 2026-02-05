@@ -86,7 +86,7 @@ X-API-Key: your-admin-api-key
 
 1. **Обязательно** установите сложный API ключ в переменной окружения:
    ```bash
-   export ADMIN_API_KEY="your-strong-random-key-here"
+   export ADMIN_API_KEY="111"
    ```
 
 2. Откройте `https://yourdomain.com/admin.html`

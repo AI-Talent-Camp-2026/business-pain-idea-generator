@@ -1,6 +1,5 @@
-// API Configuration
-// Hardcoded for local development
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// API Configuration is imported from api.js
+// API_BASE_URL is defined globally in api.js
 
 // Utility function to get query parameter
 function getQueryParam(name) {

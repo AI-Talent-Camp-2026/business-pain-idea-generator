@@ -28,7 +28,7 @@
 
 1. **ВАЖНО:** Установите свой API ключ в `.env`:
    ```bash
-   ADMIN_API_KEY=your-super-secret-key-here
+   ADMIN_API_KEY=111
    ```
 
 2. Перезапустите backend:
