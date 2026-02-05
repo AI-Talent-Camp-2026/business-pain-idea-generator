@@ -26,6 +26,18 @@
         .analogue-item:hover {
             transform: translateX(4px);
         }
+        .section-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -55,21 +67,43 @@
             <div class="space-y-6 flex flex-col h-full">
                 <!-- Pain Description -->
                 <section class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">🎯 Боль</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">
+                        <svg class="section-icon" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                        Боль
+                    </h2>
                     <p id="pain-description" class="text-gray-700 leading-relaxed">
                     </p>
                 </section>
 
                 <!-- Reasons / Evidence -->
                 <section class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">📊 Причины</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">
+                        <svg class="section-icon" viewBox="0 0 24 24">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                        Причины
+                    </h2>
                     <p id="brief-evidence" class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
                     </p>
                 </section>
 
                 <!-- Segment -->
                 <section class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">👥 Кому болит</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">
+                        <svg class="section-icon" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        Кому болит
+                    </h2>
                     <p id="segment" class="text-gray-700">
                     </p>
                 </section>
@@ -79,7 +113,13 @@
             <div class="space-y-6 flex flex-col h-full">
                 <!-- Analogues -->
                 <section class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">🔍 Аналоги</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">
+                        <svg class="section-icon" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        Аналоги
+                    </h2>
                     <div id="analogues-list" class="space-y-4">
                         <!-- Analogues will be dynamically inserted here -->
                     </div>
@@ -87,7 +127,14 @@
 
                 <!-- Plans -->
                 <section class="bg-white rounded-lg shadow-lg p-6 flex-1">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 План на 7 и 30 дней</h2>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                        <svg class="section-icon" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        План на 7 и 30 дней
+                    </h2>
                     <p class="text-gray-600 text-sm mb-4">Подписка</p>
 
                     <!-- 7 Days Plan -->
@@ -107,8 +154,13 @@
                 <!-- Heading -->
                 <div class="flex-1">
                     <h2 class="text-2xl md:text-3xl font-bold text-white flex items-center">
-                        <span class="text-3xl mr-3">🚀</span>
-                        5 заинтересованных клиентов за 30 дней <br>— или бесплатно
+                        <svg class="section-icon" style="width: 28px; height: 28px; stroke: white;" viewBox="0 0 24 24">
+                            <path d="M12 2v20"></path>
+                            <path d="m5 9 7-7 7 7"></path>
+                            <path d="m12 22-7-7"></path>
+                            <path d="m12 22 7-7"></path>
+                        </svg>
+                        <span>5 заинтересованных клиентов за 30 дней <br class="hidden md:inline">— или бесплатно</span>
                     </h2>
                 </div>
 
