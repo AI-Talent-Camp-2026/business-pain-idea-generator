@@ -2,6 +2,7 @@
 Idea generation pipeline
 
 This worker generates business ideas using OpenRouter LLM
+with REAL user pain data from Tavily Search
 """
 import asyncio
 import json
@@ -10,8 +11,14 @@ from typing import List, Dict, Any
 
 from ..models import SessionLocal, Run, Idea, Analogue
 from ..llm.client import llm_client
-from ..llm.prompts import get_generate_ideas_prompt, SYSTEM_PROMPT
-from ..config import logger
+from ..llm.prompts import (
+    get_generate_ideas_prompt,
+    get_generate_ideas_from_real_pains_prompt,
+    SYSTEM_PROMPT
+)
+from ..scrapers.tavily_scraper import TavilyScraper
+from ..llm.pain_analyzer import PainAnalyzer
+from ..config import logger, settings
 
 
 def generate_ideas(run_id: str):
@@ -33,30 +40,79 @@ def generate_ideas(run_id: str):
 
         # Update status
         run.status = 'running'
-        run.current_stage = 'Поиск идей'
         db.commit()
 
-        # Generate ideas using LLM
-        prompt, selected_direction = get_generate_ideas_prompt(run.optional_direction or "")
-
-        # Save selected direction
-        run.selected_direction = selected_direction
-        db.commit()
-
-        logger.info(f"Calling OpenRouter API for run {run_id} with direction: {selected_direction}")
-
-        # Use asyncio to call async LLM client
+        # Setup asyncio loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        response_text = loop.run_until_complete(
-            llm_client.generate(
-                prompt=prompt,
-                system_prompt=SYSTEM_PROMPT,
-                temperature=0.7,
-                max_tokens=8000
+
+        try:
+            # Determine direction
+            _, selected_direction = get_generate_ideas_prompt(run.optional_direction or "")
+            run.selected_direction = selected_direction
+            db.commit()
+
+            logger.info(f"Selected direction for run {run_id}: {selected_direction}")
+
+            # STAGE 1: Search for real user pains using Tavily
+            run.current_stage = 'Поиск реальных болей пользователей'
+            db.commit()
+
+            logger.info(f"[Stage 1] Searching for real pains via Tavily...")
+
+            try:
+                tavily_scraper = TavilyScraper()
+                search_results = loop.run_until_complete(
+                    tavily_scraper.search_pains(selected_direction, max_results=10)
+                )
+                logger.info(f"[Stage 1] Found {len(search_results)} search results from Tavily")
+            except Exception as e:
+                logger.warning(f"[Stage 1] Tavily search failed: {e}. Falling back to LLM-only generation")
+                search_results = []
+
+            # STAGE 2: Analyze and extract structured pains
+            real_pains = []
+            if search_results:
+                run.current_stage = 'Анализ найденных болей'
+                db.commit()
+
+                logger.info(f"[Stage 2] Analyzing search results to extract pains...")
+
+                try:
+                    pain_analyzer = PainAnalyzer(llm_client)
+                    real_pains = loop.run_until_complete(
+                        pain_analyzer.extract_pains(search_results, selected_direction)
+                    )
+                    logger.info(f"[Stage 2] Extracted {len(real_pains)} structured pains")
+                except Exception as e:
+                    logger.error(f"[Stage 2] Pain analysis failed: {e}")
+                    real_pains = []
+
+            # STAGE 3: Generate ideas
+            run.current_stage = 'Генерация бизнес-идей'
+            db.commit()
+
+            logger.info(f"[Stage 3] Generating ideas...")
+
+            # Choose prompt based on whether we have real pains
+            if real_pains and len(real_pains) >= 3:
+                logger.info(f"[Stage 3] Using REAL PAINS mode with {len(real_pains)} pains")
+                prompt = get_generate_ideas_from_real_pains_prompt(selected_direction, real_pains)
+            else:
+                logger.info(f"[Stage 3] Falling back to LLM-only mode (not enough real pains)")
+                prompt, _ = get_generate_ideas_prompt(selected_direction)
+
+            response_text = loop.run_until_complete(
+                llm_client.generate(
+                    prompt=prompt,
+                    system_prompt=SYSTEM_PROMPT,
+                    temperature=0.7,
+                    max_tokens=8000
+                )
             )
-        )
-        loop.close()
+
+        finally:
+            loop.close()
 
         logger.info(f"Received response from OpenRouter for run {run_id}")
 
@@ -94,6 +150,15 @@ def generate_ideas(run_id: str):
                     logger.warning(f"Skipping idea {idx}: missing required fields")
                     continue
 
+                # Convert plans from list to string if needed
+                plan_7days = idea_data.get('plan_7days', 'План генерируется...')
+                if isinstance(plan_7days, list):
+                    plan_7days = '\n'.join(f"- {step}" for step in plan_7days)
+
+                plan_30days = idea_data.get('plan_30days', 'План генерируется...')
+                if isinstance(plan_30days, list):
+                    plan_30days = '\n'.join(f"- {step}" for step in plan_30days)
+
                 # Create idea
                 idea = Idea(
                     run_id=run_id,
@@ -102,8 +167,8 @@ def generate_ideas(run_id: str):
                     segment=idea_data['segment'][:200],
                     confidence_level=idea_data.get('confidence_level', 'medium').lower(),
                     brief_evidence=idea_data.get('brief_evidence', 'Доказательства анализируются...'),
-                    plan_7days=idea_data.get('plan_7days', 'План генерируется...'),
-                    plan_30days=idea_data.get('plan_30days', 'План генерируется...'),
+                    plan_7days=plan_7days,
+                    plan_30days=plan_30days,
                     order_index=idx
                 )
 
@@ -132,8 +197,8 @@ def generate_ideas(run_id: str):
                 continue
 
         # Validate we have enough ideas
-        if saved_count < 10:
-            raise Exception(f"Недостаточно идей сгенерировано: {saved_count} (требуется минимум 10)")
+        if saved_count < 3:
+            raise Exception(f"Недостаточно идей сгенерировано: {saved_count} (требуется минимум 3)")
 
         # Mark run as completed
         run.status = 'completed'

@@ -153,6 +153,50 @@ QUICK_IDEAS_PROMPT = """Сгенерируй 10 бизнес-идей для н�
 Только JSON, без дополнительного текста."""
 
 
+GENERATE_IDEAS_FROM_REAL_PAINS_PROMPT = """На основе РЕАЛЬНЫХ пользовательских болей, найденных в интернете, сгенерируй 10-15 бизнес-идей.
+
+Направление: {direction}
+
+РЕАЛЬНЫЕ БОЛИ ПОЛЬЗОВАТЕЛЕЙ (найдены через Tavily Search в Reddit, Indie Hackers, форумах):
+{real_pains}
+
+ВАЖНО: Для каждой боли предложи 2-3 РАЗНЫХ подхода к решению (разные бизнес-модели, разные MVP, разные целевые сегменты).
+Это даст пользователю больше вариантов для выбора.
+
+Для каждой идеи создай запись в формате JSON:
+{{
+  "ideas": [
+    {{
+      "title": "Название идеи (макс 100 символов)",
+      "pain_description": "Описание боли из реальных данных (используй evidence_quotes)",
+      "segment": "Кому болит (из реальных данных)",
+      "confidence_level": "high|medium|low (из реальных данных)",
+      "brief_evidence": "Доказательства из реальных обсуждений (цитаты)",
+      "analogues": [
+        {{
+          "name": "Название существующего решения",
+          "description": "Что делают (1-2 предложения)",
+          "url": "https://example.com"
+        }}
+      ],
+      "plan_7days": "План MVP на 7 дней для solo-founder (5-7 шагов)",
+      "plan_30days": "План развития на 30 дней (10-15 шагов с неделями)"
+    }}
+  ]
+}}
+
+ВАЖНО:
+- Используй РЕАЛЬНЫЕ боли из данных выше
+- НЕ придумывай новые боли - работай только с тем что найдено
+- В brief_evidence используй реальные цитаты (evidence_quotes)
+- Confidence level бери из реальных данных
+- Если боль имеет confidence_level = "high", это приоритетная идея
+- Каждая идея должна иметь минимум 2 аналога (реальные продукты с URL)
+- Планы должны быть реалистичными для small team/solo-founder
+
+Отвечай только валидным JSON без комментариев."""
+
+
 def get_generate_ideas_prompt(direction: str = "") -> tuple[str, str]:
     """
     Get the main ideas generation prompt with random direction selection
@@ -167,3 +211,39 @@ def get_generate_ideas_prompt(direction: str = "") -> tuple[str, str]:
         direction = ", ".join(selected_directions)
 
     return QUICK_IDEAS_PROMPT.format(direction=direction), direction
+
+
+def get_generate_ideas_from_real_pains_prompt(direction: str, real_pains: list) -> str:
+    """
+    Get prompt for generating ideas from real user pains found via Tavily
+
+    Args:
+        direction: Business direction
+        real_pains: List of structured pain data from PainAnalyzer
+
+    Returns:
+        Formatted prompt string
+    """
+    # Format real pains into readable text
+    pains_text = ""
+    for idx, pain in enumerate(real_pains, 1):
+        pain_desc = pain.get('pain_description', '')
+        segment = pain.get('segment', '')
+        confidence = pain.get('confidence_level', 'medium')
+        quotes = pain.get('evidence_quotes', [])
+
+        pains_text += f"""
+--- Боль #{idx} (Confidence: {confidence}) ---
+Описание: {pain_desc}
+Сегмент: {segment}
+Доказательства (цитаты из реальных обсуждений):
+"""
+        for quote in quotes[:3]:  # Max 3 quotes per pain
+            pains_text += f"  - \"{quote}\"\n"
+
+        pains_text += "\n"
+
+    return GENERATE_IDEAS_FROM_REAL_PAINS_PROMPT.format(
+        direction=direction,
+        real_pains=pains_text
+    )

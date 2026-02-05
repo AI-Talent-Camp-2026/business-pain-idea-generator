@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
+    # Tavily Search API (for real pain data scraping)
+    tavily_api_key: str = os.getenv("TAVILY_API_KEY", "")
+
     # Redis
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
