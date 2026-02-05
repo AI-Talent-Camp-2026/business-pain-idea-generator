@@ -253,7 +253,6 @@ function displayIdeaDetail(idea) {
 
     // Plans
     document.getElementById('plan-7days').textContent = idea.plan_7days;
-    document.getElementById('plan-30days').textContent = idea.plan_30days;
 }
 
 async function toggleDetailedEvidence() {

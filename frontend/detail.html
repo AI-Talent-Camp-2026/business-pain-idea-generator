@@ -29,7 +29,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
         <!-- Back Button -->
         <button
             onclick="history.back()"
@@ -38,87 +38,97 @@
             ← Назад к списку
         </button>
 
-        <!-- Main Card -->
-        <div class="bg-white rounded-lg shadow-lg p-8">
-            <!-- Title and Confidence -->
-            <div class="flex justify-between items-start mb-6">
+        <!-- Title Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-start">
                 <h1 id="idea-title" class="text-3xl font-bold text-gray-900 pr-4">
                     Загрузка...
                 </h1>
                 <span id="confidence-level" class="confidence-badge text-sm px-3 py-1 rounded-full whitespace-nowrap">
                 </span>
             </div>
-
-            <!-- Pain Description -->
-            <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">🎯 Боль</h2>
-                <p id="pain-description" class="text-gray-700 leading-relaxed">
-                </p>
-            </section>
-
-            <!-- Segment -->
-            <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">👥 Кому болит</h2>
-                <p id="segment" class="text-gray-700">
-                </p>
-            </section>
-
-            <!-- Evidence -->
-            <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">📊 Доказательства</h2>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p id="brief-evidence" class="text-gray-700 whitespace-pre-wrap">
-                    </p>
-                </div>
-                <div id="detailed-evidence" class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4" style="display: none;">
-                    <p class="text-center text-green-700 font-semibold">
-                        ✓ Спасибо, запрос отправлен.
-                    </p>
-                </div>
-                <button
-                    id="toggle-evidence-button"
-                    onclick="toggleDetailedEvidence()"
-                    class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    💳 Купить (подробнее)
-                </button>
-            </section>
-
-            <!-- Analogues -->
-            <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-3">🔍 Аналоги</h2>
-                <div id="analogues-list" class="space-y-4">
-                    <!-- Analogues will be dynamically inserted here -->
-                </div>
-            </section>
-
-            <!-- Plans -->
-            <section class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 Планы реализации</h2>
-
-                <!-- 7 Days Plan -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
-                        🚀 План на 7 дней
-                    </h3>
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <p id="plan-7days" class="text-gray-700 whitespace-pre-wrap">
-                        </p>
-                    </div>
-                </div>
-
-                <!-- 30 Days Plan -->
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">
-                        📅 План на 30 дней
-                    </h3>
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p id="plan-30days" class="text-gray-700 whitespace-pre-wrap">
-                        </p>
-                    </div>
-                </div>
-            </section>
         </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-start">
+            <!-- Left Column -->
+            <div class="space-y-6 flex flex-col h-full">
+                <!-- Pain Description -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">🎯 Боль</h2>
+                    <p id="pain-description" class="text-gray-700 leading-relaxed">
+                    </p>
+                </section>
+
+                <!-- Reasons / Evidence -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">📊 Причины</h2>
+                    <p id="brief-evidence" class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
+                    </p>
+                </section>
+
+                <!-- Segment -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">👥 Кому болит</h2>
+                    <p id="segment" class="text-gray-700">
+                    </p>
+                </section>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6 flex flex-col h-full">
+                <!-- Analogues -->
+                <section class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">🔍 Аналоги</h2>
+                    <div id="analogues-list" class="space-y-4">
+                        <!-- Analogues will be dynamically inserted here -->
+                    </div>
+                </section>
+
+                <!-- Plans -->
+                <section class="bg-white rounded-lg shadow-lg p-6 flex-1">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">📋 План на 7 и 30 дней</h2>
+                    <p class="text-gray-600 text-sm mb-4">Подписка</p>
+
+                    <!-- 7 Days Plan -->
+                    <div>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <p id="plan-7days" class="text-gray-700 whitespace-pre-wrap">
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- CTA Block - Full Width at Bottom -->
+        <section class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-2xl p-8 border-4 border-blue-400">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <!-- Heading -->
+                <div class="flex-1">
+                    <h2 class="text-2xl md:text-3xl font-bold text-white flex items-center">
+                        <span class="text-3xl mr-3">🚀</span>
+                        5 заинтересованных клиентов за 30 дней <br>— или бесплатно
+                    </h2>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="w-full md:w-auto md:min-w-[250px]">
+                    <div id="detailed-evidence" class="mb-4 bg-green-50 border-2 border-green-400 rounded-lg p-4" style="display: none;">
+                        <p class="text-center text-green-700 font-semibold text-lg">
+                            ✓ Спасибо, запрос отправлен.
+                        </p>
+                    </div>
+                    <button
+                        id="toggle-evidence-button"
+                        onclick="toggleDetailedEvidence()"
+                        class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-300 shadow-lg text-lg"
+                    >
+                        Купить за 300 руб
+                    </button>
+                </div>
+            </div>
+        </section>
 
         <!-- Error Message -->
         <div id="error-message" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 hidden">
